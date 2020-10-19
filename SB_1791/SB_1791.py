@@ -4,18 +4,21 @@ import rospy
 from geometry_msgs.msg  import Twist
 from turtlesim.msg import Pose
 
-#our node
+#initializing the node "node_turtle_revolve"
 rospy.init_node('node_turtle_revolve', anonymous=True)
 
 pose = Pose()
 rate = rospy.Rate(50)
 
+#callback function of subscriber node
 def callback(data):
     global pose
     pose = data
     
-#publishing over topic and subscribing to pose.
+#our node is publishing to topic "/turtle/cmd/cmd_vel" topic of type Twist
 velocity_publisher = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
+
+#also our node has subscribed to topic "/turtle/pose" of type Pose
 pose_subscriber = rospy.Subscriber('/turtle1/pose', Pose, callback)
 
 def MakeACircularRound():
@@ -25,7 +28,7 @@ def MakeACircularRound():
                 
     goal_pose = Pose()
     vel_msg = Twist()
-    rate.sleep()
+    #time will help to check whether one revolution has completed or not
     StartTime = float(rospy.Time.now().to_sec())
     distance = 0
         
@@ -41,16 +44,23 @@ def MakeACircularRound():
         #distance in circular path = time * speed
         distance = vel_msg.linear.x * (FinishTime-StartTime)
 
-        #publishing our message                        
+        #publishing our message                       
         velocity_publisher.publish(vel_msg)
         rospy.loginfo("Moving in a circle")
         rate.sleep()
             
-        
+    #when one round has completed the angular speed is made 0 to stop the turtle   
     vel_msg.linear.x = 0
     vel_msg.angular.z =0
     velocity_publisher.publish(vel_msg)
     rospy.loginfo("Goal reached")
 
-MakeACircularRound()
+if __name__ == '__main__':
+    try:
+        MakeACircularRound()
+    except rospy.ROSInterruptException:
+        pass
+
+
+
       
